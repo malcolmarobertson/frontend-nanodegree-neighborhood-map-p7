@@ -1,0 +1,221 @@
+//items to investigate
+// - separate modelview for map, marker, list?
+// - separation of concerns - is it MVVM? rather use separate modelviews and sub models
+//http://stackoverflow.com/questions/8676988/example-of-knockoutjs-pattern-for-multi-view-applications/8680668#8680668
+//http://stackoverflow.com/questions/9293761/knockoutjs-multiple-viewmodels-in-a-single-view?rq=1
+
+var locations =  [
+  { 
+    id: 1,
+    name: 'St. Paul\'s Church',
+    address: 'St. Paul\'s Churchyard, London EC4M 8AD, United Kingdom'
+  },
+  { 
+    id: 2,
+    name: 'Ye Olde Cheshire Cheese',
+    address: '145 Fleet St, London EC4A 2BU, United Kingdom'  
+  },
+  { 
+    id: 3,
+    name: 'Dr Johnson\'s House',
+    address: '17 Gough Square, London EC4A 3DE, UK'
+  },
+  { 
+    id: 4,
+    name: 'St James\'s Park',
+    address: 'London SW1A 2BJ, United Kingdom'
+  },
+  { 
+    id: 5,
+    name: 'Portobello Road',
+    address: '192A Portobello Rd, London, United Kingdom W11 1LA, United Kingdom'
+  },
+  { 
+    id: 6,
+    name: 'Camden Market',
+    address: '54 - 56 Camden Lock Pl, London NW1 8AF, United Kingdom'
+  },    
+  { 
+    id: 7,
+    name: 'Charles Dickens\' Museum',
+    address: '48 Doughty St, London WC1N 2LX, UK'
+  }  
+];
+
+//Location object with Map Maker
+var Location = function (map, data, pinInfoWindow){
+  this.id = data.id;
+  this.name = data.name;
+  this.address = ko.observable(data.address); 
+  this.mapMarker = ko.observable(new Pin(map, data.address, data.name, pinInfoWindow));
+}
+
+// thanks to http://stackoverflow.com/questions/29557938/removing-map-pin-with-search
+var Pin = function (map, address, name, pinInfoWindow) {
+  
+  var self = this;
+  
+  var marker; 
+    
+  self.isVisible = ko.observable(false);
+  
+  var service = new google.maps.places.PlacesService(map);
+  var request = {
+      query: address
+  };
+  service.textSearch(request, callback);
+  
+  //asynchrous call to create Map Marker
+  function callback(results, status) {
+    //marker is only created if Google  Place is successfully found
+    if (status == google.maps.places.PlacesServiceStatus.OK) {
+      createMapMarker(results[0], self);
+    }
+  }
+  
+  function createMapMarker(placeData) {
+
+    // The next lines save location data from the search result object to local variables
+    var lat = placeData.geometry.location.lat();  // latitude from the place service
+    var lon = placeData.geometry.location.lng();  // longitude from the place service
+    var formattedAddress = placeData.formatted_address;   // formmated address of the place from the place service
+    var bounds = window.mapBounds;            // current boundaries of the map window
+    
+    // marker is an object with additional data about the pin for a single location
+    marker = new google.maps.Marker({
+      map: map,
+      position: placeData.geometry.location,
+      animation: google.maps.Animation.DROP,
+      title: name
+    });
+        
+    //when the filter toggles place visibility, the KO subscription will toggle marker as well
+    self.isVisible.subscribe(function(currentState) {
+      if (currentState) {
+        marker.setMap(map);
+      } else {
+        marker.setMap(null);
+      }
+    });      
+    self.isVisible(true);
+      
+    //open InfoWindow and animate marker when clicked
+    google.maps.event.addListener(marker, 'click', function() {
+      if (marker.getAnimation() !== null) {
+        marker.setAnimation(null);
+      } else {
+        marker.setAnimation(google.maps.Animation.BOUNCE);
+      }
+      pinInfoWindow.updateInfoWindowContent(name);
+      pinInfoWindow.infoWindow.open(map, marker);
+    });
+    
+    //remove content and stop animation when InfoWindow closed
+    google.maps.event.addListener(pinInfoWindow.infoWindow, 'closeclick', function() {        
+        pinInfoWindow.infoWindow.setContent('');
+        if (marker.getAnimation() !== null) {
+          marker.setAnimation(null);
+        };        
+      });   
+    
+    // this is where the pin actually gets added to the map.
+    // bounds.extend() takes in a map location object
+    bounds.extend(new google.maps.LatLng(lat, lon));
+    // fit the map to the new marker
+    map.fitBounds(bounds);
+    // center the map
+    map.setCenter(bounds.getCenter());
+  }
+}
+
+//Object for InfoWindow
+var PinInfoWindow = function () {
+
+  var self = this;
+  
+  self.infoWindow = new google.maps.InfoWindow();
+  
+  self.updateInfoWindowContent = function (name) {
+    
+    //setup timeout for asynchrous call to Wiki API
+    var wikiRequestTimeout = setTimeout(function() {
+       self.infoWindow.setContent('Wiki API Failed :(');
+    }, 8000);
+    
+    //todo - get 'nice' information from API
+    var wikiUrl = 'https://en.wikipedia.org/w/api.php?action=opensearch&search=' 
+    + name + '&format=json&callback=wikiCallback';
+    
+    //asynchrous ajax call to Wiki API        
+    $.ajax( {
+      url: wikiUrl,      
+      dataType: 'jsonp',
+      success: function(response) {
+        var infoWindowContent = '';
+        articleList = response[1];
+        
+        articleStr = articleList[0];
+        var url = 'https://en.wikipedia.org/wiki/' + articleStr;                          
+        infoWindowContent = infoWindowContent + '<li><a href="' + url + '">' + articleStr + '</a></li>';      
+            
+        self.infoWindow.setContent(infoWindowContent);
+        clearTimeout(wikiRequestTimeout);
+      }
+    });  
+  };
+}
+
+function initMap() {
+  
+  var mapOptions = {
+    //disableDefaultUI: true
+    center: {lat: 0, lng: 0},
+  };
+  
+  map = new google.maps.Map(document.querySelector('#map_canvas'), mapOptions);
+  
+  // Sets the boundaries of the map based on pin locations
+  window.mapBounds = new google.maps.LatLngBounds();
+  
+  // Vanilla JS way to listen for resizing of the window
+  // and adjust map bounds
+  window.addEventListener('resize', function(e) {
+    map.fitBounds(mapBounds);
+  });
+}
+
+
+var ViewModel = function() {
+  
+  var self = this;    
+  
+  initMap();
+  
+  self.pinInfoWindow = new PinInfoWindow();
+  
+  self.locationList = ko.observableArray([]);
+  
+  locations.forEach(function(locationItem) {    
+    self.locationList.push(new Location(map, locationItem, self.pinInfoWindow));    
+  }); 
+  
+  self.locationFilter = ko.observable("");
+  
+  //filter locations based on textinput. Markers also toggle.
+  self.filteredLocationList = ko.computed(function () {
+    
+    return ko.utils.arrayFilter(self.locationList(), function (location) { 
+      var doesMatch = location.name.toLowerCase().indexOf(
+        self.locationFilter().toLowerCase()) > -1;
+        
+      location.mapMarker().isVisible(doesMatch);      
+        
+      return doesMatch;    
+    });
+  }); 
+}
+
+ko.applyBindings(new ViewModel());
+
+
+

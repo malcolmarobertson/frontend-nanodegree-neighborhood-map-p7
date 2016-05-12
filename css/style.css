@@ -1,0 +1,63 @@
+body {
+    color: #6b6b6b;
+    font-family: "Roboto", sans-serif;
+}
+
+header {
+    padding-bottom: 20px;
+}
+
+.logo-pic {
+    margin-top: 20px;
+}
+
+nav {
+    padding-left: 15px;
+    padding-right: 15px;
+    font-weight: 300;
+    font-size: 1.5em;
+}
+
+h1 {
+    font-weight: 200;
+    font-size: 5em;
+}
+
+h2 {
+    font-weight: 300;
+    font-size: 2em;
+}
+
+h3 {
+    font-weight: 300;
+    font-size: 2em;
+}
+
+a {
+    color: blue;
+    font-weight: 300;
+}
+
+.featured-prop {
+    color: blue;
+}
+
+.map_container{
+    position: relative;
+    width: 100%;
+    padding-bottom: 56.25%; /* Ratio 16:9 ( 100%/16*9 = 56.25% ) */
+}
+.map_container .map_canvas{
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    margin: 0;
+    padding: 0;
+}
+
+footer {
+    color: blue;
+}
+
