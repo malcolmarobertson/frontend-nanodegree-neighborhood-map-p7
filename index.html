@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neighborhood Map</title>
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/simple-sidebar.css">
+    <link rel="stylesheet" href="css/style.css">
+
+
+    <link href='https://fonts.googleapis.com/css?family=Roboto:100,200,300,400,500,600,700,800' rel='stylesheet'>
+
+</head>
+
+<body>
+    <!-- Header for Logo and Name -->
+
+
+    <div id="wrapper">
+    <!-- Sidebar -->
+        <div id="sidebar-wrapper">
+          <div class="container-fluid">
+
+                <img src="img/logo.png" class="sidebar-logo img-responsive center-block" alt="Logo">
+
+          </div>
+          <div class="location-list">
+
+                  <p class="filter-text">
+                    Filter:
+                  </p>
+                  <p>
+                      <input data-bind="textInput: locationFilter" />
+                  </p>
+                  <ul data-bind="foreach: filteredLocationList"">
+                      <li>
+                          <span data-bind="text: name, click: mapMarker().pinClick"> </span>
+                      </li>
+                  </ul>
+          </div>
+        </div>
+        <!-- /#sidebar-wrapper -->
+
+        <!-- Page Content -->
+        <div id="page-content-wrapper">
+            <section class="container-fluid no-padding">
+
+                <div class="row">
+                   <div id="menu-toggle" class="col-md-1 arrow no-padding">
+                         <img src="img/left-arrow.svg" alt="arrow">
+                         <img style="display:none" src="img/right-arrow.svg "alt="arrow">
+                     </div>
+                    <div class="col-md-11 no-padding">
+                        <div class="map_container container-fluid">
+                            <div id="map_canvas" class="map_canvas">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+             </section>
+
+             <footer class=container>
+                 <div class="row">
+
+                     <div class="col-md-12">
+                         <h5>&copy;
+                         <script type="text/javascript">
+                            document.write(new Date().getFullYear());
+                         </script>
+                         - A MalTech Production
+                        </h5>
+                     </div>
+                 </div>
+             </footer>
+        </div>
+    </div>
+
+
+
+    <!--javascript-->
+    <script src="js/jquery-2.2.3.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <script src="js/knockout-3.4.0.js"></script>
+    <script src="js/bsHelper.js"></script>
+    <script
+      src="http://maps.googleapis.com/maps/api/js?key=AIzaSyCLiHO6slQhfshBeG2LF1Af1wReyp1Y1pc&libraries=places&callback=initMap"
+      async defer
+    onerror="googleMapError()"></script>
+
+    <script src="js/app.js"></script>
+
+</body>
+
+</html>

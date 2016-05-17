@@ -43,15 +43,19 @@ var locations =  [
 ];
 
 //Location object with Map Maker
-var Location = function (map, data, pinInfoWindow){
-  this.id = data.id;
-  this.name = data.name;
-  this.address = ko.observable(data.address);
-  this.mapMarker = ko.observable(new Pin(map, data.address, data.name, pinInfoWindow));
-}
+var Location = function (data){
+  "use strict";
+  var self = this;
+  self.id = data.id;
+  self.name = data.name;
+  self.address = ko.observable(data.address);
+  self.mapMarker = ko.observable(new Pin(data.address, data.name));
+};
 
 // thanks to http://stackoverflow.com/questions/29557938/removing-map-pin-with-search
-var Pin = function (map, address, name, pinInfoWindow) {
+var Pin = function (address, name) {
+
+  "use strict";
 
   var self = this;
 
@@ -69,7 +73,7 @@ var Pin = function (map, address, name, pinInfoWindow) {
   function callback(results, status) {
     //marker is only created if Google  Place is successfully found
     if (status == google.maps.places.PlacesServiceStatus.OK) {
-      createMapMarker(results[0], self);
+      createMapMarker(results[0]);
     }
   }
 
@@ -89,6 +93,18 @@ var Pin = function (map, address, name, pinInfoWindow) {
       title: name
     });
 
+    //add click handler when pin is clicked
+    self.pinClick = function () {
+        if (marker.getAnimation() !== null) {
+          marker.setAnimation(null);
+        } else {
+          marker.setAnimation(google.maps.Animation.BOUNCE);
+          setTimeout( function() {marker.setAnimation(null);}, 1400);
+        }
+        pinInfoWindow.updateInfoWindowContent(name);
+        pinInfoWindow.infoWindow.open(map, marker);
+    };
+
     //when the filter toggles place visibility, the KO subscription will toggle marker as well
     self.isVisible.subscribe(function(currentState) {
       if (currentState) {
@@ -100,22 +116,15 @@ var Pin = function (map, address, name, pinInfoWindow) {
     self.isVisible(true);
 
     //open InfoWindow and animate marker when clicked
-    google.maps.event.addListener(marker, 'click', function() {
-      if (marker.getAnimation() !== null) {
-        marker.setAnimation(null);
-      } else {
-        marker.setAnimation(google.maps.Animation.BOUNCE);
-      }
-      pinInfoWindow.updateInfoWindowContent(name);
-      pinInfoWindow.infoWindow.open(map, marker);
-    });
+    marker.addListener('click', self.pinClick);
+    //google.maps.event.addListener(marker, 'click', self.pinClick);
 
     //remove content and stop animation when InfoWindow closed
     google.maps.event.addListener(pinInfoWindow.infoWindow, 'closeclick', function() {
         pinInfoWindow.infoWindow.setContent('');
         if (marker.getAnimation() !== null) {
           marker.setAnimation(null);
-        };
+        }
       });
 
     // this is where the pin actually gets added to the map.
@@ -126,23 +135,30 @@ var Pin = function (map, address, name, pinInfoWindow) {
     // center the map
     map.setCenter(bounds.getCenter());
   }
-}
+};
 
 //Object for InfoWindow
 var PinInfoWindow = function () {
+  "use strict";
 
   var self = this;
 
+  var articleList;
+  var articleStr;
+
   self.infoWindow = new google.maps.InfoWindow();
+  self.infoWindow.setContent('Loading...');
 
   self.updateInfoWindowContent = function (name) {
+
+    self.infoWindow.setContent('Loading...');
 
     //setup timeout for asynchrous call to Wiki API
     var wikiRequestTimeout = setTimeout(function() {
        self.infoWindow.setContent('Wiki API Failed :(');
     }, 8000);
 
-    //todo - get 'nice' information from API
+    //to do - get 'nice' information from API
     var wikiUrl = 'https://en.wikipedia.org/w/api.php?action=opensearch&search='
     + name + '&format=json&callback=wikiCallback';
 
@@ -158,45 +174,23 @@ var PinInfoWindow = function () {
         var url = 'https://en.wikipedia.org/wiki/' + articleStr;
         infoWindowContent = infoWindowContent + '<li><a href="' + url + '">' + articleStr + '</a></li>';
 
+
         self.infoWindow.setContent(infoWindowContent);
         clearTimeout(wikiRequestTimeout);
       }
-    });
-  };
-}
-
-function initMap() {
-
-  var mapOptions = {
-    //disableDefaultUI: true
-    center: {lat: 0, lng: 0},
-  };
-
-  map = new google.maps.Map(document.querySelector('#map_canvas'), mapOptions);
-
-  // Sets the boundaries of the map based on pin locations
-  window.mapBounds = new google.maps.LatLngBounds();
-
-  // Vanilla JS way to listen for resizing of the window
-  // and adjust map bounds
-  window.addEventListener('resize', function(e) {
-    map.fitBounds(mapBounds);
-  });
-}
-
+    })
+  }
+};
 
 var ViewModel = function() {
+  "use strict";
 
   var self = this;
-
-  initMap();
-
-  self.pinInfoWindow = new PinInfoWindow();
 
   self.locationList = ko.observableArray([]);
 
   locations.forEach(function(locationItem) {
-    self.locationList.push(new Location(map, locationItem, self.pinInfoWindow));
+    self.locationList.push(new Location(locationItem));
   });
 
   self.locationFilter = ko.observable("");
@@ -213,9 +207,27 @@ var ViewModel = function() {
       return doesMatch;
     });
   });
-}
+};
 
-ko.applyBindings(new ViewModel());
+function initMap() {
 
+  var mapOptions = {
+    //disableDefaultUI: true
+    center: {lat: 0, lng: 0},
+  };
 
+  map = new google.maps.Map(document.querySelector('#map_canvas'), mapOptions);
 
+  pinInfoWindow = new PinInfoWindow();
+
+  ko.applyBindings(new ViewModel());
+
+  // Sets the boundaries of the map based on pin locations
+  window.mapBounds = new google.maps.LatLngBounds();
+
+  // Vanilla JS way to listen for resizing of the window
+  // and adjust map bounds
+  window.addEventListener('resize', function(e) {
+    map.fitBounds(mapBounds);
+  });
+};

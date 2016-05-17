@@ -3,25 +3,55 @@ body {
     font-family: "Roboto", sans-serif;
 }
 
-header {
-    padding-bottom: 20px;
-}
-
-.logo-pic {
-    margin-top: 20px;
-}
-
-nav {
-    padding-left: 15px;
-    padding-right: 15px;
-    font-weight: 300;
-    font-size: 1.5em;
-}
-
 h1 {
     font-weight: 200;
-    font-size: 5em;
+    font-size: 3.5vw;
 }
+
+.sidebar-logo {
+	margin-top: 20px;
+}
+
+.arrow{
+	
+	max-width: 70px;
+}
+
+.no-padding {
+	
+	
+	padding: 0;
+	
+}
+
+.arrow img{
+	
+	min-width: 30px;
+	
+}
+
+.location-list {
+	padding-top: 20px;
+	padding-left: 20px;  
+	font-weight: 400;
+  font-size: 3vh;
+  
+}
+
+.location-list input {	
+	font-weight: 400;
+  font-size: 2.5vh;
+}
+
+.location-list li {	
+	font-weight: 400;
+  font-size: 2.5vh;
+}
+
+ul {
+  padding-left: 20px;    
+}
+
 
 h2 {
     font-weight: 300;
@@ -34,12 +64,8 @@ h3 {
 }
 
 a {
-    color: #0bcbd6;
+    color: blue;
     font-weight: 300;
-}
-
-.featured-prop {
-    color: #0bcbd6;
 }
 
 .map_container{
@@ -58,6 +84,6 @@ a {
 }
 
 footer {
-    color: #0bcbd6;
+    color: blue;
 }
 
