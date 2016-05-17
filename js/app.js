@@ -156,7 +156,7 @@ var PinInfoWindow = function () {
     //setup timeout for asynchrous call to Wiki API
     var wikiRequestTimeout = setTimeout(function() {
        self.infoWindow.setContent('Wiki API Failed :(');
-    }, 8000);
+    }, 4000);
 
     //to do - get 'nice' information from API
     var wikiUrl = 'https://en.wikipedia.org/w/api.php?action=opensearch&search='
